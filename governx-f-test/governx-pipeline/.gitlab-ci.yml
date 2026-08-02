@@ -1,0 +1,101 @@
+# GovernX — Pipeline de création de projet (Axe 1)
+# Déclenchement : manuel uniquement, via le formulaire "Run pipeline" de GitLab
+stages:
+  - create_project
+  - configure_tags
+  - audit_check
+
+variables:
+  PROJECT_NAME:
+    description: "Nom du/des nouveau(x) projet(s) GitLab à créer, séparés par des virgules (ex: api-clients, api-contrats)"
+  PROJECT_TYPE:
+    description: "Type de projet"
+    value: "backend"
+    options:
+      - "backend"
+      - "frontend"
+      - "batch"
+      - "dependencie"
+  GROUP_PATH:
+    description: "Chemin du groupe GitLab cible (ex: nom-groupe/sous-groupe)"
+  TEMPLATE_VARIANT:
+    description: "Variante du template en cas de multi-match (optionnel, doit correspondre exactement au nom ou path du template)"
+  MAX_PARALLEL_PROJECTS:
+    description: "Nombre de projets traités simultanément (création, tagging, audit)"
+    value: "4"
+  AUDIT_AUTO_FIX:
+    description: "Activer le mode correctif automatique de l'audit (yes/no)"
+    value: "no"
+    options:
+      - "no"
+      - "yes"
+  AUDIT_ACCEPT_NONCOMPLIANT:
+    description: "Accepter un projet non conforme sans bloquer le pipeline (yes/no)"
+    value: "no"
+    options:
+      - "no"
+      - "yes"
+
+  # --- Performance ---
+  # Le dépôt du pipeline n'a pas besoin de son historique : clone superficiel.
+  GIT_DEPTH: "1"
+  GIT_SUBMODULE_STRATEGY: none
+  # Archivage/extraction des artifacts en parallèle.
+  FF_USE_FASTZIP: "true"
+  # Cache pip local au projet, donc éligible au cache GitLab ci-dessous.
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+default:
+  # Image complète (et non -slim) : git y est déjà installé, ce qui évite un
+  # `apt-get update && apt-get install git` (~30 s) à chaque job. L'image est
+  # mise en cache par le runner, le surcoût de pull n'est payé qu'une fois.
+  image: python:3.11
+  tags:
+    - docker
+  cache:
+    key:
+      files:
+        - ci/requirements.txt
+    paths:
+      - .cache/pip
+  before_script:
+    - pip install --quiet --disable-pip-version-check -r ci/requirements.txt
+
+create_project:
+  stage: create_project
+  script:
+    - python3 -m ci.create_project
+  artifacts:
+    when: always
+    paths:
+      - reports/created_projects.json
+    reports:
+      dotenv: create_project.env
+
+configure_tags:
+  stage: configure_tags
+  needs:
+    - job: create_project
+      artifacts: true
+  script:
+    - python3 -m ci.configure_tags
+
+audit_check:
+  stage: audit_check
+  needs:
+    - job: create_project
+      artifacts: true
+    - job: configure_tags
+  script:
+    - python3 -m ci.audit_check
+  artifacts:
+    when: always
+    expose_as: "Rapport d'audit GovernX"
+    paths:
+      - reports/audit_report.html
+      - reports/audit_report.json
+      - reports/audit_report.txt

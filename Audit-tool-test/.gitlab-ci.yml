@@ -1,0 +1,95 @@
+stages:
+  - audit
+
+variables:
+  GITLAB_AUDIT_URL:
+    description: "URL de l'instance GitLab à auditer (ex: http://172.20.109.143:8929)"
+  GITLAB_AUDIT_TOKEN:
+    description: "Token GitLab avec scope 'api' (à définir comme variable MASQUÉE et PROTÉGÉE dans Settings > CI/CD)"
+  GITLAB_AUDIT_USER_ID:
+    description: "ID(s) ou username(s) pour la règle specific_user_access, séparés par des virgules (ex: alice,bob). Laisser vide pour ignorer la règle."
+  AUDIT_TIER:
+    value: "free"
+    options:
+      - "free"
+      - "premium"
+    description: "Édition GitLab cible pour les fixs (free=CE, premium=Premium/Ultimate)"
+  AUDIT_FIX:
+    value: "false"
+    options:
+      - "false"
+      - "true"
+    description: "Active la remédiation automatique des non-conformités (--fix)"
+  AUDIT_DRY_RUN:
+    value: "true"
+    options:
+      - "true"
+      - "false"
+    description: "Simule les corrections sans écrire dans GitLab (--dry-run, nécessite AUDIT_FIX=true)"
+  AUDIT_USER_BRANCHES:
+    description: "Branches et types d'accès pour tier=premium, ex: 'main:both,develop:merge,release/*:push'"
+  EXCLUDED_GROUP_PATH:
+    description: "Chemin du groupe à exclure de l'audit (optionnel)"
+
+  # Sorties Python non bufferisées : les logs du script s'affichent en temps réel
+  PYTHONUNBUFFERED: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+audit_gitlab_cih:
+  stage: audit
+  image: python:3.11-slim
+  tags:
+    - docker
+  timeout: 1h
+  cache:
+    key:
+      files:
+        - pyproject.toml
+    paths:
+      - .cache/pip
+  before_script:
+    # Versions alignées sur pyproject.toml — les garder synchronisées
+    - pip install "python-gitlab==8.4.0" "python-dotenv==1.2.2"
+  script:
+    - |
+      set -eu
+
+      if [ -z "${GITLAB_AUDIT_URL:-}" ]; then
+        echo "❌ GITLAB_AUDIT_URL est vide. Lancez le pipeline via 'Run pipeline' en renseignant l'URL de l'instance à auditer."
+        exit 1
+      fi
+      if [ -z "${GITLAB_AUDIT_TOKEN:-}" ]; then
+        echo "❌ GITLAB_AUDIT_TOKEN est vide. Définissez-le en variable masquée (Settings > CI/CD > Variables) ou au lancement du pipeline."
+        exit 1
+      fi
+
+      # Construction des arguments : les options vides / les flags off ne sont pas passés
+      set -- --url "$GITLAB_AUDIT_URL" --token "$GITLAB_AUDIT_TOKEN" --tier "${AUDIT_TIER:-free}"
+
+      if [ -n "${GITLAB_AUDIT_USER_ID:-}" ]; then
+        set -- "$@" --user-id "$GITLAB_AUDIT_USER_ID"
+      fi
+      if [ -n "${AUDIT_USER_BRANCHES:-}" ]; then
+        set -- "$@" --user-branches "$AUDIT_USER_BRANCHES"
+      fi
+      if [ "${AUDIT_FIX:-false}" = "true" ]; then
+        set -- "$@" --fix
+        if [ "${AUDIT_DRY_RUN:-true}" = "true" ]; then
+          set -- "$@" --dry-run
+        fi
+      fi
+
+      # -m depuis la racine du dépôt : indispensable pour que les imports
+      # 'from audit_tool.…' se résolvent (python audit_tool/main.py échoue)
+      cd "$CI_PROJECT_DIR"
+      python -m audit_tool.main "$@"
+  artifacts:
+    name: "audit-gitlab-$CI_PIPELINE_ID"
+    paths:
+      - reports/
+    expire_in: 30 days
+    when: always
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "schedule"

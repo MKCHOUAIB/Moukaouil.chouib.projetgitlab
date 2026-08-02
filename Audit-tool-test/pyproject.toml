@@ -1,0 +1,9 @@
+[project]
+name = "audit-gitlab-cih"
+version = "1.0.0"
+description = "Outil d'audit de conformité GitLab pour CIH Bank"
+requires-python = ">=3.11"
+dependencies = [
+    "python-gitlab==8.4.0",
+    "python-dotenv==1.2.2",
+]

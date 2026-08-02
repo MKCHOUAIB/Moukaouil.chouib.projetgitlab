@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Artifacts produits par le pipeline
+reports/
+create_project.env
