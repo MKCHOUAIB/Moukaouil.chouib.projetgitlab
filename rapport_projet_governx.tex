@@ -1,0 +1,442 @@
+\documentclass[12pt,a4paper]{report}
+
+% --- PAQUETS DE BASE ET ENCODAGE ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+% --- COULEURS ET DESIGN ---
+\usepackage{xcolor}
+\definecolor{primaryColor}{RGB}{20, 50, 100}       % Bleu Nuit Institutionnel
+\definecolor{secondaryColor}{RGB}{220, 50, 30}     % Accent Rouge/Corail CIH
+\definecolor{darkGray}{RGB}{60, 64, 67}
+\definecolor{lightGray}{RGB}{245, 247, 250}
+\definecolor{codeBg}{RGB}{240, 243, 246}
+\definecolor{codeGreen}{RGB}{34, 139, 34}
+\definecolor{codeBlue}{RGB}{0, 102, 204}
+\definecolor{codePurple}{RGB}{128, 0, 128}
+
+% --- TYPOGRAPHIE ET TITRES ---
+\usepackage{titlesec}
+\titleformat{\chapter}[hang]
+  {\normalfont\huge\bfseries\color{primaryColor}}{\thechapter.}{1em}{}
+\titlespacing*{\chapter}{0pt}{-10pt}{20pt}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{primaryColor}}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{secondaryColor}}{\thesubsection}{1em}{}
+
+% --- EN-TÊTES ET PIEDS DE PAGE ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{darkGray}\leftmark}
+\fancyhead[R]{\small\color{darkGray}Projet GovernX \& Audit Tool}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- AUTRES PAQUETS UTILES ---
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{amsmath,amssymb}
+\usepackage[most]{tcolorbox}
+\usepackage{caption}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryColor,
+    citecolor=primaryColor,
+    urlcolor=secondaryColor,
+    pdftitle={Rapport de Projet - GovernX et Audit Tool GitLab},
+    pdfauthor={Chouaib MOUKAOUIL}
+}
+
+% --- CONFIGURATION DES LISTINGS DE CODE ---
+\usepackage{listings}
+\lstset{
+    backgroundcolor=\color{codeBg},
+    basicstyle=\ttfamily\small\color{darkGray},
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{codeGreen}\itshape,
+    keywordstyle=\color{codeBlue}\bfseries,
+    stringstyle=\color{codePurple},
+    numbers=left,
+    numberstyle=\tiny\color{darkGray},
+    stepnumber=1,
+    numbersep=8pt,
+    tabsize=4,
+    showstringspaces=false,
+    frame=single,
+    rulecolor=\color{lightGray}
+}
+
+% Style spécifique pour le Python
+\lstdefinestyle{PythonStyle}{
+    language=Python,
+    morekeywords={async, await, match, case, self}
+}
+
+% Style spécifique pour le YAML / CI-CD
+\lstdefinestyle{YamlStyle}{
+    keywords={stages, stage, script, variables, artifacts, needs, rules, image, tags},
+    keywordstyle=\color{codeBlue}\bfseries
+}
+
+% Encadrés d'information avec tcolorbox
+\newtcolorbox{infoBox}[1][]{
+  colback=lightGray,
+  colframe=primaryColor,
+  fonttitle=\bfseries\color{white},
+  coltitle=white,
+  title=#1,
+  arc=3pt,
+  boxrule=1pt,
+  left=10pt,
+  right=10pt,
+  top=8pt,
+  bottom=8pt
+}
+
+\newtcolorbox{warnBox}[1][]{
+  colback=codeBg,
+  colframe=secondaryColor,
+  fonttitle=\bfseries\color{white},
+  coltitle=white,
+  title=#1,
+  arc=3pt,
+  boxrule=1pt
+}
+
+% --- DEBUT DU DOCUMENT ---
+\begin{document}
+
+% ==============================================================================
+% PAGE DE GARDE
+% ==============================================================================
+\begin{titlepage}
+    \centering
+    
+    % Logos / Entête institutionnelle
+    \begin{minipage}{0.48\textwidth}
+        \begin{left}
+            \textbf{\Large Établissement Universitaire}\\
+            \textcolor{darkGray}{\small Département Informatique \& DevOps}
+        \end{left}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \begin{right}
+            \textbf{\Large CIH BANK}\\
+            \textcolor{darkGray}{\small Direction des Systèmes d'Information}
+        \end{right}
+    \end{minipage}
+    
+    \vfill
+    \hr[2pt]
+    \vspace{0.8cm}
+    
+    {\Huge \bfseries \color{primaryColor} RAPPORT DE PROJET DE FIN D'ÉTUDES} \\[0.5cm]
+    {\Large \bfseries \color{secondaryColor} Plateforme d'Orchestration CI/CD, de Provisionnement et d'Audit de Conformité GitLab} \\[0.3cm]
+    {\large \textit{Conception et implémentation de GovernX Pipeline \& de l'Outil d'Audit CIH Bank}}
+    
+    \vspace{0.8cm}
+    \hr[1pt]
+    \vfill
+    
+    \begin{minipage}{0.48\textwidth}
+        \Large
+        \textbf{Réalisé par :}\\
+        \textcolor{primaryColor}{\textbf{Chouaib MOUKAOUIL}}\\[0.3cm]
+        \small
+        \textit{Élève Ingénieur / Étudiant}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \Large
+        \begin{right}
+            \textbf{Encadré par :}\\
+            \textcolor{primaryColor}{\textbf{Encadrant Académique}}\\
+            \textcolor{primaryColor}{\textbf{Encadrant Professionnel (CIH)}}\\[0.3cm]
+        \end{right}
+    \end{minipage}
+    
+    \vfill
+    
+    \textbf{Année Universitaire :} 2025 -- 2026
+\end{titlepage}
+
+% ==============================================================================
+% REMERCIEMENTS & RESUME
+% ==============================================================================
+\chapter*{Résumé}
+\addcontentsline{toc}{chapter}{Résumé}
+Ce rapport présente la conception et la réalisation de la plateforme \textbf{GovernX} ainsi que du composant autonome \textbf{Audit-Tool}, développés pour automatiser la gouvernance des répertoires d'entreprise sur GitLab. L'objectif principal est de garantir un alignement strict avec les exigences de sécurité et de conformité bancaire (CIH Bank) dès le création d'un projet et tout au long de son cycle de vie.
+
+La solution repose sur deux piliers majeurs :
+\begin{enumerate}
+    \item \textbf{GovernX Pipeline} : Un orchestrateur CI/CD automatisé à 3 étapes (\texttt{create\_project}, \texttt{configure\_tags}, \texttt{audit\_check}) capable de créer plusieurs projets en parallèle depuis des modèles (templates), de renommer dynamiquement les manifestes (\texttt{pom.xml} / \texttt{package.json}) en kebab-case et d'exécuter des vérifications de conformité.
+    \item \textbf{Audit Tool} : Un moteur d'audit et de remédiation en Python permettant d'évaluer la sécurité des branches protégées, des tags de livraison, des statuts de pipelines et des accès utilisateurs spécifiques, avec possibilité de correction automatique (\texttt{--fix}) et simulation à blanc (\texttt{--dry-run}).
+\end{enumerate}
+
+La solution a été rigoureusement validée par une suite de 84 tests unitaires sous Pytest et est prête pour un déploiement en environnement de production.
+
+\vspace{0.5cm}
+\textbf{Mots-clés :} GitLab CI/CD, Gouvernance, Audit de Conformité, Automates Python, Provisionnement, Remédiation Automatique, DevSecOps.
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ==============================================================================
+% INTRODUCTION GENERALE
+% ==============================================================================
+\chapter*{Introduction Générale}
+\addcontentsline{toc}{chapter}{Introduction Générale}
+
+Dans le contexte actuel de la transformation numérique bancaire, la vitesse de livraison des logiciels doit impérativement s'accompagner d'un niveau maximal de sécurité et de conformité réglementaire. Les architectures modernes basées sur les pratiques DevSecOps imposent de contrôler l'intégralité du cycle de vie des dépôts de code source dès leur initialisation.
+
+Historiquement, le provisionnement des projets applicatifs et le paramétrage des règles de protection (branches stratégiques, règles d'accès, signatures de versions) s'effectuaient de manière manuelle ou semi-automatisée, ce qui exposait le système d'information à des risques d'erreur humaine et d'hétérogénéité des configurations.
+
+Pour répondre à cette problématique, ce projet propose une approche globale articulée autour de deux outils complémentaires :
+\begin{itemize}
+    \item \textbf{GovernX} : Une plateforme de provisionnement et d'orchestration CI/CD permettant d'instancier des projets conformes par lot à partir de modèles d'entreprise.
+    \item \textbf{Audit Tool} : Un outil d'analyse et de correction automatique garantissant la conformité continue des répertoires GitLab.
+\end{itemize}
+
+Ce document détaille l'analyse du besoin, l'architecture logicielle retenue, l'implémentation des algorithmes clés ainsi que les résultats de validation technique.
+
+% ==============================================================================
+% CHAPITRE 1 : CONTEXTE ET ETAT DE L'ART
+% ==============================================================================
+\chapter{Contexte du Projet et Analyse des Besoins}
+
+\section{Présentation du Contexte}
+Au sein des environnements bancaires tels que celui de CIH Bank, la prolifération des projets microservices (backend Java/SpringBoot, frontend Angular/React, batchs nocturnes) nécessite d'imposer des normes strictes de gouvernance Git.
+
+\section{Problématique}
+Les principales difficultés identifiées lors de la création et du suivi des projets GitLab sont :
+\begin{itemize}
+    \item \textbf{Divergence de structure} : Non-respect des conventions de nommage des artefacts (\texttt{artifactId} Maven ou \texttt{name} npm).
+    \item \textbf{Absence de règles de protection} : Branches principales (\texttt{main}, \texttt{master}, \texttt{release/*}) non verrouillées contre les poussées directes ou les fusions sans revue.
+    \item \textbf{Absence de traçabilité des livraisons} : Tags de version mal protégés ou ne respectant pas les règles de signature.
+    \item \textbf{Effort manuel important} : Audit fastidieux de plusieurs centaines de projets.
+\end{itemize}
+
+\section{Objectifs du Projet}
+Pour pallier ces limites, les objectifs suivants ont été arrêtés :
+\begin{infoBox}[Objectifs Stratégiques]
+\begin{enumerate}
+    \item Automatiser la création multi-projets depuis des templates certifiés.
+    \item Réécrire et aligner automatiquement les identifiants de manifestes en kebab-case.
+    \item Appliquer des contrôles de conformité automatisés sur les branches, tags et pipelines.
+    \item Fournir un mécanisme de remédiation automatique (\texttt{auto-fix}) sans régression.
+    \item Générer des rapports multi-formats (JSON, TXT, HTML) directement intégrés aux pipelines CI/CD.
+\end{enumerate}
+\end{infoBox}
+
+% ==============================================================================
+% CHAPITRE 2 : ARCHITECTURE DU SYSTEME GOVERNX
+% ==============================================================================
+\chapter{Architecture et Conception du Système GovernX}
+
+\section{Architecture Globale}
+La plateforme se compose de deux répertoires principaux :
+\begin{itemize}
+    \item \texttt{Audit-tool-test} : Outil CLI autonome de contrôle et de remédiation.
+    \item \texttt{governx-f-test} : Pipeline d'orchestration CI/CD (Axe 1) hébergeant les composants de provisionnement.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tcolorbox}[colback=white,colframe=primaryColor,width=0.9\textwidth,title=Flux du Pipeline CI/CD GovernX]
+    \small
+    \textbf{Stage 1: create\_project} $\rightarrow$ Clone miroir du template $\rightarrow$ Alignement du manifeste (\texttt{pom.xml} / \texttt{package.json}) $\rightarrow$ Push vers GitLab local.\\[0.2cm]
+    \textbf{Stage 2: configure\_tags} $\rightarrow$ Application des topics (\texttt{backend}, \texttt{frontend}, \texttt{batch}, \texttt{dependencie}).\\[0.2cm]
+    \textbf{Stage 3: audit\_check} $\rightarrow$ Audit de conformité $\rightarrow$ Remédiation si \texttt{AUDIT\_AUTO\_FIX=yes} $\rightarrow$ Génération des rapports HTML/JSON.
+    \end{tcolorbox}
+    \caption{Schéma synthétique de l'orchestration du Pipeline GovernX}
+    \label{fig:pipeline_flow}
+\end{figure}
+
+\section{Pipeline CI/CD à 3 Étapes}
+Le fichier \texttt{.gitlab-ci.yml} définit le flux d'exécution déclenché via le formulaire web "Run pipeline".
+
+\begin{lstlisting}[style=YamlStyle, caption={Structure du pipeline GitLab CI GovernX}]
+stages:
+  - create_project
+  - configure_tags
+  - audit_check
+
+variables:
+  MAX_PARALLEL_PROJECTS: "4"
+  AUDIT_AUTO_FIX: "no"
+  AUDIT_ACCEPT_NONCOMPLIANT: "no"
+
+create_project:
+  stage: create_project
+  script:
+    - python3 -m ci.create_project
+  artifacts:
+    reports:
+      dotenv: create_project.env
+
+configure_tags:
+  stage: configure_tags
+  needs: ["create_project"]
+  script:
+    - python3 -m ci.configure_tags
+
+audit_check:
+  stage: audit_check
+  needs: ["create_project", "configure_tags"]
+  script:
+    - python3 -m ci.audit_check
+  artifacts:
+    expose_as: "Rapport d'audit GovernX"
+    paths:
+      - reports/audit_report.html
+\end{lstlisting}
+
+\section{Gestion Multi-Projets et Fail-Closed}
+Le pipeline accepte une liste de noms de projets séparés par des virgules (ex: \texttt{api-clients, api-contrats}). Les caractéristiques majeures de l'exécution sont :
+\begin{itemize}
+    \item \textbf{Traitement Parallèle} : Limité à \texttt{MAX\_PARALLEL\_PROJECTS} (par défaut 4).
+    \item \textbf{Principe Fail-Closed} : En cas d'ambiguïté sur un manifeste ou un nom invalide, le traitement échoue immédiatement sans deviner de valeur par défaut.
+    \item \textbf{Isolation des Échecs} : Une erreur sur un projet du lot n'interrompt pas les autres projets.
+\end{itemize}
+
+% ==============================================================================
+% CHAPITRE 3 : REGLES D'AUDIT ET REMEDIATION
+% ==============================================================================
+\chapter{Moteur d'Audit et de Remédiation (Audit Tool)}
+
+\section{Règles de Conformité Implémentées}
+L'outil d'audit vérifie quatre axes fondamentaux :
+
+\subsection{1. Branches Protégées (\texttt{protected\_branches.py})}
+Vérifie que la branche principale (détectée dynamiquement via \texttt{project.default\_branch}) ainsi que les branches \texttt{develop} et \texttt{release/*} imposent des seuils d'accès stricts pour la fusion (\texttt{merge}) et la poussée (\texttt{push}).
+
+\subsection{2. Tags Protégés (\texttt{protected\_tags.py})}
+Impose un schéma de protection des tags dérivé du contenu du manifeste. Pour un artefact nommé \texttt{simple-springboot-app}, le motif de tag attendu est :
+\begin{equation}
+    \text{Pattern Tag} = \text{artifactId} + \text{"-*"} \quad \Longrightarrow \quad \text{\texttt{simple-springboot-app-*}}
+\end{equation}
+Le niveau de création requis est fixé au palier Admin (\texttt{create\_access\_level = 60}).
+
+\subsection{3. Statut du Pipeline (\texttt{pipeline\_success.py})}
+Contrôle que le dernier pipeline exécuté sur la branche par défaut s'est terminé avec le statut \texttt{success}.
+
+\subsection{4. Accès Utilisateurs Spécifiques (\texttt{specific_user_access.py})}
+Audite les rôles attribués à des utilisateurs désignés sur l'instance GitLab, en adaptant les vérifications selon l'édition (\texttt{free} CE vs \texttt{premium}).
+
+\section{Mécanisme de Remédiation Automatique}
+Lorsque le paramètre \texttt{AUDIT\_AUTO\_FIX=yes} (ou l'option CLI \texttt{--fix}) est activé, l'outil applique directement les corrections via l'API REST de GitLab :
+
+\begin{table}[htbp]
+    \centering
+    \caption{Synthèse des actions de remédiation}
+    \begin{tabular}{lll}
+        \toprule
+        \textbf{Module} & \textbf{Anomalie Détectée} & \textbf{Action de Correction} \\
+        \midrule
+        Protected Branches & Branche non protégée ou seuil trop faible & Création/mise à jour de la règle d'accès \\
+        Protected Tags & Motif de tag absent ou niveau $<$ Admin & Protection du tag \texttt{\{artifactId\}-*} (Niveau 60) \\
+        Pipeline Status & Échec du pipeline principal & Notification / Relance ciblée \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+% ==============================================================================
+% CHAPITRE 4 : IMPLEMENTATION TECHNIQUE ET VALIDATION
+% ==============================================================================
+\chapter{Implémentation Technique et Validation}
+
+\section{Structure du Code et Fichiers Clés}
+Le tableau \ref{tab:structure_files} présente l'organisation des fichiers clés développés au sein du projet.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Organisation des composants logiciels}
+    \label{tab:structure_files}
+    \begin{tabular}{lp{10cm}}
+        \toprule
+        \textbf{Fichier} & \textbf{Rôle et Description} \\
+        \midrule
+        \texttt{manifest.py} & Détection, lecture et réécriture du slug kebab-case dans \texttt{pom.xml} / \texttt{package.json}. \\
+        \texttt{create\_project.py} & Stage 1 : instanciation, push miroir et mise à jour du manifeste. \\
+        \texttt{configure\_tags.py} & Stage 2 : attribution des topics selon le \texttt{PROJECT\_TYPE}. \\
+        \texttt{audit\_check.py} & Stage 3 : exécution des règles d'audit, remédiation et rapports. \\
+        \texttt{report\_html.py} & Génération du rapport d'audit au format HTML autonome. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\section{Extrait de Code : Détection du Manifeste}
+Le listing \ref{lst:manifest_code} illustre la fonction d'extraction du slug de l'identifiant du projet.
+
+\begin{lstlisting}[style=PythonStyle, caption={Extrait de code du module manifest.py}, label={lst:manifest_code}]
+def slugify(name: str) -> str:
+    """Convertit un nom de projet en kebab-case strict."""
+    name = name.strip().lower()
+    name = re.sub(r"[^a-z0-9]+", "-", name)
+    name = name.strip("-")
+    if not name:
+        raise ManifestError("Nom de projet invalide pour la conversion slug")
+    return name
+
+def read_identifier(manifest_path: str, stack: str) -> str:
+    """Lit l'identifiant racine d'un pom.xml (<artifactId>) ou package.json ("name")."""
+    if stack == "maven":
+        return _extract_maven_artifact_id(manifest_path)
+    elif stack == "npm":
+        return _extract_npm_name(manifest_path)
+    raise ManifestError(f"Stack inconnu: {stack}")
+\end{lstlisting}
+
+\section{Résultats des Tests et Validation}
+Une suite complète de tests automatisés sans dépendance réseau a été mise en place avec \textbf{Pytest}.
+
+\begin{warnBox}[Résultats du Scan et de Validation Technique]
+\begin{itemize}
+    \item \textbf{Total des tests exécutés} : 84 / 84 tests validés avec succès (100\% de réussite).
+    \item \textbf{Temps d'exécution} : 0.19 seconde.
+    \item \textbf{Compilation Python} : 0 erreur de syntaxe sur l'ensemble des modules.
+    \item \textbf{Statut Git} : Dépôt propre, versionné et synchronisé sur le remote GitHub.
+\end{itemize}
+\end{warnBox}
+
+% ==============================================================================
+% CONCLUSION ET PERSPECTIVES
+% ==============================================================================
+\chapter*{Conclusion Générale et Perspectives}
+\addcontentsline{toc}{chapter}{Conclusion Générale et Perspectives}
+
+\section*{Bilan du Projet}
+Ce projet a permis de concevoir et d'implémenter une solution complète et robuste pour la gouvernance et l'audit des dépôts GitLab au sein d'un environnement d'entreprise exigant tel que CIH Bank.
+
+Grâce au couplage entre l'orchestrateur \textbf{GovernX} et le moteur d'audit \textbf{Audit Tool}, le processus de création de projets applicatifs est désormais entièrement automatisé, sécurisé et conforme dès la première minute.
+
+Les objectifs clés ont tous été atteints :
+\begin{itemize}
+    \item Suppression des configurations manuelles et des erreurs humaines.
+    \item Alignement systématique des manifestes en kebab-case.
+    \item Application automatisée des règles de sécurité (branches, tags Admin 60).
+    \item Intégration fluide dans les pipelines GitLab CI existants.
+\end{itemize}
+
+\section*{Perspectives d'Évolution}
+Plusieurs axes d'amélioration peuvent être envisagés pour les phases futures :
+\begin{enumerate}
+    \item \textbf{Axe 2 -- Intégration Portail Développeur (Backstage)} : Permettre le déclenchement du provisionnement directement depuis un portail Self-Service pour les équipes de développement.
+    \item \textbf{Axe 3 -- Webhooks de Conformité en Temps Réel} : Intercepter les événements de création/modification de répertoires sur GitLab pour appliquer l'audit de manière événementielle.
+    \item \textbf{Extension des Règles Métier} : Ajouter des contrôles sur les clés de sécurité (SAST/DAST), la recherche de secrets et la conformité des licences open-source.
+\end{enumerate}
+
+\end{document}
